@@ -120,7 +120,7 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
                 }
             }
 
-            InputNumberFeedback = new IntFeedback(() =>
+            InputNumberFeedback = new IntFeedback("inputNumber", () =>
             {
                 return InputNumber;
             });
@@ -678,9 +678,17 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
                     () => lastVolumeSent);
             }
 
-            MuteFeedback = new BoolFeedback(() => IsMuted);
-            VolumeLevelFeedback = new IntFeedback(() => volumeLevelForSig);
-            VideoMuteIsOn = new BoolFeedback(() => VideoIsMuted);
+            MuteFeedback = new BoolFeedback("muteOn", () => IsMuted);
+            VolumeLevelFeedback = new IntFeedback("volume", () => volumeLevelForSig);
+            VideoMuteIsOn = new BoolFeedback("videoMuteOn", () => VideoIsMuted);
+
+            // The base display list already holds power, input and warming/cooling. Add the rest of
+            // the display's state so anything reading Feedbacks sees it; each fires when its value
+            // changes.
+            Feedbacks.Add(MuteFeedback);
+            Feedbacks.Add(VolumeLevelFeedback);
+            Feedbacks.Add(VideoMuteIsOn);
+            Feedbacks.Add(InputNumberFeedback);
 
             AddRoutingInputPort(
                 new RoutingInputPort(RoutingPortNames.HdmiIn1, eRoutingSignalType.Audio | eRoutingSignalType.Video,
