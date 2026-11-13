@@ -92,7 +92,7 @@ public class ConfigDeserializationTests
             "warmingTimeMs": 15000,
             "udpSocketKey": "udpKey",
             "macAddress": "00:11:22:33:44:55",
-            "wolBroadcastAddress": "192.168.100.255",
+            "wolBroadcastAddress": "192.0.2.255",
             "wolPort": 9,
             "smallDisplay": false,
             "overrideWol": false,
