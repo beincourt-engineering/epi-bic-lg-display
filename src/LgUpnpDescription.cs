@@ -21,6 +21,21 @@ namespace Epi.Display.Lg
         /// <summary>The UDP port a display answers an SSDP search on.</summary>
         public const int SsdpPort = 1900;
 
+        /// <summary>
+        /// The TCP ports a webOS 4 display (the UR340C) serves its descriptions on, read when the SSDP search gets no
+        /// answer - a processor whose firewall drops the reply never sees the search's result.
+        /// </summary>
+        public static readonly int[] KnownDescriptionPorts = { 1584, 1819 };
+
+        /// <summary>The description URLs on <see cref="KnownDescriptionPorts"/> for a display's address.</summary>
+        public static List<string> KnownLocations(string host)
+        {
+            var found = new List<string>();
+            if (string.IsNullOrWhiteSpace(host)) return found;
+            foreach (var port in KnownDescriptionPorts) found.Add("http://" + host.Trim() + ":" + port + "/");
+            return found;
+        }
+
         private static readonly Regex Location = new Regex(@"^\s*LOCATION\s*:\s*(\S+)\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
         private static readonly Regex ModelShape = new Regex(@"^[A-Za-z0-9][A-Za-z0-9\-./]{3,40}$");
 

@@ -64,6 +64,13 @@ public class LgUpnpDescriptionTests
     }
 
     [Fact]
+    public void The_known_description_ports_are_the_fallback()
+    {
+        LgUpnpDescription.KnownLocations(Host).Should().Equal("http://192.0.2.53:1584/", "http://192.0.2.53:1819/");
+        LgUpnpDescription.KnownLocations(" ").Should().BeEmpty();
+    }
+
+    [Fact]
     public void The_search_asks_the_display_itself_for_every_service()
     {
         var request = LgUpnpDescription.SearchRequest(Host);

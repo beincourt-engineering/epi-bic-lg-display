@@ -167,6 +167,10 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
         }
 
         private int modelReadRunning;
+        private string modelRead = "";
+
+        /// <summary><c>modelRead</c>: how the last model read went, e.g. "55UR340C9UD from the UPnP search"; empty until one has run.</summary>
+        public StringFeedback ModelReadFeedback { get; private set; }
 
         /// <summary>
         /// Reads the model from the display's UPnP description in the background, once a display on the network has
@@ -183,19 +187,17 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
             {
                 try
                 {
-                    var model = LgUpnpModelReader.ReadModel(host.Trim());
-                    if (model == null)
+                    var read = LgUpnpModelReader.Read(host.Trim());
+                    // how the read went, as a status point a monitor can show, and once in the log
+                    if (read.Outcome != modelRead)
                     {
-                        this.LogDebug("The display published no model over UPnP");
-                        return;
+                        modelRead = read.Outcome;
+                        ModelReadFeedback?.FireUpdate();
+                        this.LogInformation("Display model read: {Outcome}", read.Outcome);
                     }
 
-                    this.LogInformation("Display model {Model}, from its UPnP description", model);
-                    SetDeviceInfo(d => ((LgDisplayDeviceInfo)d).Model = model, model);
-                }
-                catch (Exception e)
-                {
-                    this.LogDebug("The display's model was not read: {Message}", e.Message);
+                    if (read.Model != null)
+                        SetDeviceInfo(d => ((LgDisplayDeviceInfo)d).Model = read.Model, read.Model);
                 }
                 finally
                 {
@@ -731,6 +733,8 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
             Feedbacks.Add(VolumeLevelFeedback);
             Feedbacks.Add(VideoMuteIsOn);
             Feedbacks.Add(InputNumberFeedback);
+            ModelReadFeedback = new StringFeedback("modelRead", () => modelRead);
+            Feedbacks.Add(ModelReadFeedback);
 
             AddRoutingInputPort(
                 new RoutingInputPort(RoutingPortNames.HdmiIn1, eRoutingSignalType.Audio | eRoutingSignalType.Video,

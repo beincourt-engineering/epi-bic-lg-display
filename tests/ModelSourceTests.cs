@@ -25,7 +25,9 @@ public class ModelSourceTests
     {
         var controller = Source("LgDisplayController.cs");
 
-        controller.Should().Contain("LgUpnpModelReader.ReadModel(host.Trim())");
+        controller.Should().Contain("LgUpnpModelReader.Read(host.Trim())");
+        controller.Should().Contain("ModelReadFeedback = new StringFeedback(\"modelRead\", () => modelRead);");
+        controller.Should().Contain("Feedbacks.Add(ModelReadFeedback);");
         controller.Should().Contain("Task.Run(");
         controller.Should().Contain("if (Interlocked.Exchange(ref modelReadRunning, 1) == 1) return;");
         // on the monitor going OK, and in UpdateDeviceInfo before the keycode check
