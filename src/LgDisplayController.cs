@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Threading.Tasks;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -29,7 +30,7 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
         /// version it reports. One instance for the life of the device, so what is written to it is
         /// what readers see.
         /// </summary>
-        public DeviceInfo DeviceInfo { get; } = new DeviceInfo();
+        public DeviceInfo DeviceInfo { get; } = new LgDisplayDeviceInfo();
 
         public event DeviceInfoChangeHandler DeviceInfoChanged;
 
@@ -144,6 +145,9 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
         /// </summary>
         public void UpdateDeviceInfo()
         {
+            // The model comes from the display's UPnP description, whichever command set controls it.
+            ReadModelIfMissing();
+
             if (UsesIpControlKeycode)
             {
                 return;
@@ -160,6 +164,44 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
             {
                 UpdateDeviceInfo();
             }
+        }
+
+        private int modelReadRunning;
+
+        /// <summary>
+        /// Reads the model from the display's UPnP description in the background, once a display on the network has
+        /// none yet. A display on a serial port has no address to ask.
+        /// </summary>
+        private void ReadModelIfMissing()
+        {
+            if (!string.IsNullOrEmpty(((LgDisplayDeviceInfo)DeviceInfo).Model)) return;
+            var host = (Communication as GenericTcpIpClient)?.Hostname;
+            if (string.IsNullOrWhiteSpace(host)) return;
+            if (Interlocked.Exchange(ref modelReadRunning, 1) == 1) return;
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var model = LgUpnpModelReader.ReadModel(host.Trim());
+                    if (model == null)
+                    {
+                        this.LogDebug("The display published no model over UPnP");
+                        return;
+                    }
+
+                    this.LogInformation("Display model {Model}, from its UPnP description", model);
+                    SetDeviceInfo(d => ((LgDisplayDeviceInfo)d).Model = model, model);
+                }
+                catch (Exception e)
+                {
+                    this.LogDebug("The display's model was not read: {Message}", e.Message);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref modelReadRunning, 0);
+                }
+            });
         }
 
         private void SetDeviceInfo(Action<DeviceInfo> set, string value)
@@ -980,6 +1022,7 @@ namespace PepperDash.Essentials.Plugins.Lg.Display
             if (e.Status == MonitorStatus.IsOk)
             {
                 UpdateDeviceInfoIfMissing();
+                ReadModelIfMissing();
             }
         }
 

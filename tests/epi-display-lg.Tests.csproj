@@ -25,6 +25,7 @@
     <Compile Include="..\src\LgIpControlCipher.cs" Link="Linked\LgIpControlCipher.cs" />
     <!-- So is the serial number and software version reply parse. -->
     <Compile Include="..\src\LgDeviceInfoReply.cs" Link="Linked\LgDeviceInfoReply.cs" />
+    <Compile Include="..\src\LgUpnpDescription.cs" Link="Linked\LgUpnpDescription.cs" />
   </ItemGroup>
 
   <ItemGroup>
